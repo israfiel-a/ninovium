@@ -21,7 +21,11 @@
 
 bool Ni_CreateWindow(ni_window_t *window, const char *title)
 {
-    if (window == NULL) return false;
+    if (window == NULL)
+    {
+        Ni_SetErrorID(missing_parameter, true, NINOVIUM_DEFAULT_FC);
+        return false;
+    }
 
 #if defined(NINOVIUM_WAYLAND)
     glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
@@ -66,7 +70,7 @@ bool Ni_CreateWindow(ni_window_t *window, const char *title)
     window->width = resolution->width;
     window->height = resolution->height;
     window->title = NULL;
-    Ni_ChangeWindowTitle(window, title);
+    if (title != NULL) Ni_ChangeWindowTitle(window, title);
 
     // Hide and disable movement of the cursor. This ensures our cursor
     // doesn't move off-screen or hit a border and break gameplay.
@@ -77,7 +81,11 @@ bool Ni_CreateWindow(ni_window_t *window, const char *title)
 
 void Ni_DestroyWindow(ni_window_t *window)
 {
-    if (window == NULL || window->_ == NULL) return;
+    if (window == NULL || window->_ == NULL)
+    {
+        Ni_SetErrorID(missing_parameter, true, NINOVIUM_DEFAULT_FC);
+        return;
+    }
     glfwDestroyWindow(window->_);
 
     window->title = NULL;
@@ -89,7 +97,11 @@ void Ni_DestroyWindow(ni_window_t *window)
 
 void Ni_ChangeWindowTitle(ni_window_t *window, const char *title)
 {
-    if (window == NULL || window->_ == NULL) return;
+    if (window == NULL || window->_ == NULL || title == NULL)
+    {
+        Ni_SetErrorID(missing_parameter, true, NINOVIUM_DEFAULT_FC);
+        return;
+    }
 
     window->title = title;
     glfwSetWindowTitle(window->_, window->title);

@@ -30,14 +30,14 @@
  * interface is fundamentally changed or added. It rolls over every time a
  * new major version is released.
  */
-#define NINOVIUM_VERSION_MINOR 1
+#define NINOVIUM_VERSION_MINOR 0
 
 /**
  * @brief A number representing the tweak version (x.x.X) of the currently
  * running Ninovium binaries. This will increment by one every time a
  * change is pushed, and rolls over every new major or minor version.
  */
-#define NINOVIUM_VERSION_TWEAK 13
+#define NINOVIUM_VERSION_TWEAK 2
 
 /**
  * @brief A string representing the release cycle name / ID of the
