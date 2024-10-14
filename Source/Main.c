@@ -2,7 +2,9 @@
 int main(void)
 {
     Ni_StartEngine("Generic RPG", NULL);
-    Ni_TerminateEngine();
 
+    Ni_RunEngine();
+
+    Ni_TerminateEngine();
     return 0;
 }

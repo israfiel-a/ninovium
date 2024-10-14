@@ -106,3 +106,26 @@ void Ni_ChangeWindowTitle(ni_window_t *window, const char *title)
     window->title = title;
     glfwSetWindowTitle(window->_, window->title);
 }
+
+bool Ni_WindowStillOpen(const ni_window_t *window)
+{
+    if (window == NULL || window->_ == NULL)
+    {
+        Ni_SetErrorID(missing_parameter, true, NINOVIUM_DEFAULT_FC);
+        return false;
+    }
+
+    return !glfwWindowShouldClose(window->_);
+}
+
+void Ni_UpdateWindow(const ni_window_t *window)
+{
+    if (window == NULL || window->_ == NULL)
+    {
+        Ni_SetErrorID(missing_parameter, true, NINOVIUM_DEFAULT_FC);
+        return;
+    }
+
+    glfwPollEvents();
+    glfwSwapBuffers(window->_);
+}

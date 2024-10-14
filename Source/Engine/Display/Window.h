@@ -84,4 +84,8 @@ void Ni_DestroyWindow(ni_window_t *window);
  */
 void Ni_ChangeWindowTitle(ni_window_t *window, const char *title);
 
+bool Ni_WindowStillOpen(const ni_window_t *window);
+
+void Ni_UpdateWindow(const ni_window_t *window);
+
 #endif // NINOVIUM__WINDOW_H

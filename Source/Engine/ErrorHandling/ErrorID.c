@@ -19,7 +19,7 @@ void Ni_SetErrorID(ni_error_code_t code, bool print,
                          unfixed, context};
 
     if (print)
-        Ni_PrintError(context, "%d/%s: %s", errid.code, errid.name,
+        Ni_PrintError(context, "%d/%s: %s\n", errid.code, errid.name,
                       errid.description);
 }
 

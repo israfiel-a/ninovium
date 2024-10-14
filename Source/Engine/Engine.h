@@ -16,7 +16,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-bool Ni_StartEngine(const char *title, const char *args);
+bool Ni_StartEngine(const char *title, const char **args);
 void Ni_TerminateEngine(void);
+
+bool Ni_RunEngine(void);
 
 #endif // NINOVIUM__ENGINE_H
