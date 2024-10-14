@@ -150,6 +150,7 @@ file(GLOB PROJECT_SOURCES ${SOURCE_DIRECTORY}/*.c ${SOURCE_DIRECTORY}/*.h
     ${ENGINE_DIRECTORY}/*.c ${ENGINE_DIRECTORY}/*.h
     ${ENGINE_DIRECTORY}/Utilities/*.c ${ENGINE_DIRECTORY}/Utilities/*.h
     ${ENGINE_DIRECTORY}/Utilities/Output/*.c ${ENGINE_DIRECTORY}/Utilities/Output/*.h
+    ${ENGINE_DIRECTORY}/Utilities/Input/*.c ${ENGINE_DIRECTORY}/Utilities/Input/*.h
     ${ENGINE_DIRECTORY}/ErrorHandling/*.c ${ENGINE_DIRECTORY}/ErrorHandling/*.h
     ${ENGINE_DIRECTORY}/Display/*.c ${ENGINE_DIRECTORY}/Display/*.h
 )

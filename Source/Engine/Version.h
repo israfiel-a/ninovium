@@ -37,7 +37,7 @@
  * running Ninovium binaries. This will increment by one every time a
  * change is pushed, and rolls over every new major or minor version.
  */
-#define NINOVIUM_VERSION_TWEAK 3
+#define NINOVIUM_VERSION_TWEAK 4
 
 /**
  * @brief A string representing the release cycle name / ID of the

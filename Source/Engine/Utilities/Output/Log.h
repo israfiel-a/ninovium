@@ -28,9 +28,9 @@ typedef struct ni_file_context
 #define NINOVIUM_DEFAULT_FC                                               \
     (ni_file_context_t) { FILENAME, __func__, __LINE__ }
 
-void Ni_PrintMessage(const char *format, ...);
-void Ni_PrintToFile(FILE *s, const char *format, ...);
-
+void Ni_PrintMessage(ni_file_context_t, const char *format, ...);
 void Ni_PrintError(ni_file_context_t context, const char *format, ...);
+
+void Ni_PrintToFile(FILE *s, const char *format, ...);
 
 #endif // NINOVIUM__LOG_H

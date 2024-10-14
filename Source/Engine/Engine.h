@@ -13,12 +13,18 @@
 #ifndef NINOVIUM__ENGINE_H
 #define NINOVIUM__ENGINE_H
 
+#include <Display/Renderer.h>
+#include <Utilities/Input/InitArgs.h>
 #include <stdbool.h>
 #include <stddef.h>
 
-bool Ni_StartEngine(const char *title, const char **args);
+bool Ni_StartEngine(const char *title, ni_init_args_t args);
 void Ni_TerminateEngine(void);
 
 bool Ni_RunEngine(void);
+
+void Ni_ChangeDisplayInitRoutine(ni_display_init_t func);
+void Ni_ChangeDisplayRoutine(ni_display_run_t func);
+void Ni_ChangeDisplayKillsRoutine(ni_display_kill_t func);
 
 #endif // NINOVIUM__ENGINE_H
