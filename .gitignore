@@ -1,0 +1,7 @@
+/build/
+/.cache/
+/BuildProject.sh
+/RunProject.sh
+/out
+/.vs
+/CMakeSettings.json

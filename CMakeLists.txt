@@ -1,0 +1,166 @@
+# Project settings. If the user doesn't have at least CMake 3.29.5,
+# fail the application's build.
+cmake_minimum_required(VERSION 3.29.5..3.30.2 FATAL_ERROR)
+project("RPG" DESCRIPTION "A generic RPG game." LANGUAGES C)
+message(STATUS "Attempting to build a ${CMAKE_BUILD_TYPE} version of ${PROJECT_NAME}.")
+
+# Make sure CMake knows where to find any modules we may have declared.
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/Include)
+
+# Make sure we're running on a supported CPU architecture.
+include(TargetArchitecture)
+target_architecture(CMAKE_TARGET_ARCHITECTURES)
+list(LENGTH CMAKE_TARGET_ARCHITECTURES cmake_target_arch_len)
+if(NOT "${cmake_target_arch_len}" STREQUAL "1")
+    message(FATAL_ERROR "Trying to compile for multiple architectures simultaneously.")
+endif()
+if(${CMAKE_TARGET_ARCHITECTURES} STREQUAL "unknown")
+    message(FATAL_ERROR "Unsupported CPU architecture.")
+endif()
+
+# Default flags (release OR debug) for all the operating systems
+# the project supports. "Linux" flags include MacOS as well.
+set(DEFAULT_FLAGS_LINUX -Wall -Werror -Wpedantic -Wfatal-errors)
+set(DEFAULT_FLAGS_WINDOWS /Wall /WX /wd5045 /wd4820 /wd4996 /wd4710 /wd4711 /wd4464)
+set(LIBRARY_LIST)
+
+set(LIBRARY_FLAGS_LINUX -Wno-pedantic)
+set(LIBRARY_FLAGS_WINDOWS /wd4191 /wd4242)
+
+# Append some flags and do some other calculations should we
+# be on a supported operating system. If we're not, this compilation
+# process should stop immediately.
+if(LINUX)
+    set(C_FLAGS_DEBUG ${DEFAULT_FLAGS_LINUX} -g -fsanitize=undefined)
+    set(C_FLAGS_RELEASE ${DEFAULT_FLAGS_LINUX} -Ofast)
+    set(C_LINKER_FLAGS -fsanitize=undefined)
+
+    if(${CMAKE_TARGET_ARCHITECTURES} STREQUAL "x86_64")
+        list(APPEND LIBRARY_LIST glfw3-linux-64 glad2-linux-64 cglm-linux-64 m)
+    elseif(${CMAKE_TARGET_ARCHITECTURES} STREQUAL "i386")
+        list(APPEND LIBRARY_LIST glfw3-linux-32 glad2-linux-32 cglm-linux-32 m)
+    else()
+        list(APPEND LIBRARY_LIST glfw3-linux-arm glad2-linux-arm 
+            cglm-linux-arm m)
+    endif()
+
+    # If we're running on Linux, we've gotta figure out what
+    # windowing server we're running. I've configured CMake to prefer
+    # Wayland, as it's very much better than X11 for our purposes.
+    message(STATUS "Building for Linux.")
+    add_compile_definitions(BUILD_PLATFORM=1)
+    find_library(WAYLAND NAMES wayland wayland-client)
+    find_library(X11 NAMES x11 X11)
+
+    if(NOT "${WAYLAND}" STREQUAL "WAYLAND-NOTFOUND")
+        add_compile_definitions(DISPLAY_SERVER=0)
+        set(GLFW_BUILD_X11 false)
+        set(GLFW_BUILD_WAYLAND true)
+        message(STATUS "Using the Wayland display server.")
+    elseif(NOT "${X11}" STREQUAL "X11-NOTFOUND")
+        add_compile_definitions(DISPLAY_SERVER=1)
+        set(GLFW_BUILD_WAYLAND false)
+        set(GLFW_BUILD_X11 true)
+        message(STATUS "Using the X11 display server.")
+    else()
+        message(FATAL_ERROR "Your Linux distribution uses an unsupported"
+            " display server. Leto will not be able to run.")
+    endif()
+elseif(WIN32)
+    message(STATUS "Building for Windows.")
+    add_compile_definitions(BUILD_PLATFORM=0)
+    set(C_FLAGS_DEBUG ${DEFAULT_FLAGS_WINDOWS} /fsanitize=address)
+    set(C_FLAGS_RELEASE ${DEFAULT_FLAGS_WINDOWS} /O2)
+    
+    if(${CMAKE_TARGET_ARCHITECTURES} STREQUAL "x86_64")
+        list(APPEND LIBRARY_LIST glfw3-win-64 glad2-win-64 cglm-win-64)
+    elseif(${CMAKE_TARGET_ARCHITECTURES} STREQUAL "i386")
+        list(APPEND LIBRARY_LIST glfw3-win-32 glad2-win-32 cglm-win-32)
+    else()
+        message(FATAL_ERROR "Windows for ARM is not supported as of yet.")
+    endif()
+else()
+    message(FATAL_ERROR "Unsupported operating system. Please find a machine "
+        "running either Linux, Windows, or MacOS and recompile the program.")
+endif()
+
+# Build directory configuration. This forces CMakes to build
+# into a folder within the current build folder named after the
+# project.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${PROJECT_NAME}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+# Project directory macros, so we can access them easier.
+set(INCLUDE_DIRECTORY "${CMAKE_SOURCE_DIR}/Include")
+set(LIB_DIRECTORY "${CMAKE_SOURCE_DIR}/Libraries")
+set(SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/Source")
+set(RESOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/Resources")
+
+# Print out each of these directories for the user's amusement.
+message(STATUS "Build directory: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\n"
+    "\tLibrary directory: ${LIB_DIRECTORY}\n\tInclude directory: "
+    "${INCLUDE_DIRECTORY}\n\tSource directory: ${SOURCE_DIRECTORY}\n"
+    "\tResource directory: ${RESOURCE_DIRECTORY}")
+
+# Set the C standard to compile for. We want C11, which contains
+# some features like _Generic that make programming in this archaic
+# language a whole lot easier.
+set(C_STANDARD 11)
+set(C_STANDARD_REQUIRED on)
+message(STATUS "Using the ${CMAKE_C_COMPILER_ID} compiler.\n  "
+    "\tStandard: C${C_STANDARD}")
+
+# Depending on the target type of binary we're building for, add some
+# commands and flags.
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
+    add_compile_definitions(NINOVIUM_DEBUG)
+    add_compile_options(${C_FLAGS_DEBUG})
+    add_link_options(${C_LINKER_FLAGS})
+else()
+    add_compile_options(${C_FLAGS_RELEASE})
+endif()
+
+# Set some path macros to represent the different libraries we're
+# pulling into the project build.
+set(GLFW_PATH "${INCLUDE_DIRECTORY}/GLFW")
+set(GLAD_PATH "${INCLUDE_DIRECTORY}/GLAD2")
+set(CGLM_PATH "${INCLUDE_DIRECTORY}/CGLM")
+
+# Include the respective "inc" directories of each one of our dependencies,
+# and the source directory of the project. Also specify the link directory,
+# which will tell our program where to look first to link libraries.
+include_directories("${INCLUDE_DIRECTORY}" "${SOURCE_DIRECTORY}" "${SOURCE_DIRECTORY}/Engine")
+link_directories("${LIB_DIRECTORY}")
+# Print out these set directories.
+message(STATUS "Library Info:\n\tLink Directory: ${CMAKE_BINARY_DIR}\n"
+    "\tLibraries: ${LIBRARY_LIST}")
+message(STATUS "Dependency Info:\n\tGLFW: ${GLFW_PATH}\n\tGLAD: "
+    "${GLAD_PATH}\n\tCGLM: ${CGLM_PATH}")
+
+# Copy the assets over to the build directory so we can access them when
+# we run the game.
+file(COPY ${RESOURCE_DIRECTORY} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+add_compile_definitions(ASSET_DIR="./Resources")
+    
+# Define and list the source files within the project.
+message(STATUS "${PROJECT_NAME} source files:")
+set(ENGINE_DIRECTORY "${SOURCE_DIRECTORY}/Engine")
+file(GLOB PROJECT_SOURCES ${SOURCE_DIRECTORY}/*.c ${SOURCE_DIRECTORY}/*.h
+    ${ENGINE_DIRECTORY}/*.c ${ENGINE_DIRECTORY}/*.h
+    ${ENGINE_DIRECTORY}/Utilities/*.c ${ENGINE_DIRECTORY}/Utilities/*.h
+    ${ENGINE_DIRECTORY}/Utilities/Output/*.c ${ENGINE_DIRECTORY}/Utilities/Output/*.h
+    ${ENGINE_DIRECTORY}/ErrorHandling/*.c ${ENGINE_DIRECTORY}/ErrorHandling/*.h
+    ${ENGINE_DIRECTORY}/Display/*.c ${ENGINE_DIRECTORY}/Display/*.h
+)
+# Define the filename of each file without its basename.
+foreach(file ${PROJECT_SOURCES})
+    cmake_path(GET file FILENAME CURRENT_FILENAME)
+    set_source_files_properties(${file} PROPERTIES COMPILE_DEFINITIONS 
+        FILENAME="${CURRENT_FILENAME}")
+    message(NOTICE "\t${CURRENT_FILENAME}")
+endforeach()
+
+# Add an executable and link needed libraries to it.
+add_executable(${PROJECT_NAME} ${PROJECT_SOURCES})
+target_link_libraries(${PROJECT_NAME} ${LIBRARY_LIST})
