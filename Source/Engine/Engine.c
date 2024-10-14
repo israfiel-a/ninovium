@@ -2,6 +2,7 @@
 #include <Display/Renderer.h>
 #include <Display/Window.h>
 #include <ErrorHandling/ErrorID.h>
+#include <Utilities/Input/InitArgs.h>
 
 static ni_window_t window = {NULL, 0, 0, NULL};
 static ni_renderer_t renderer = {GLM_MAT4_IDENTITY_INIT, {0, NULL}};
@@ -29,6 +30,8 @@ bool Ni_StartEngine(const char *title, const char **args)
         Ni_SetErrorID(missing_parameter, true, NINOVIUM_DEFAULT_FC);
         return false;
     }
+
+    Ni_ParseInitArgs(args);
 
     Ni_CreateWindow(&window, title);
     Ni_CreateRenderer(&renderer, NULL);
